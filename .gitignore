@@ -1,0 +1,74 @@
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual envs
+.venv/
+venv/
+env/
+.env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project: data & outputs
+synthesize_train/
+outputs_balanced/
+comer_data/
+all_character_images/
+papers/
+lightning_logs/
+*.ckpt
+checkpoints/
+
+# Datasets (Kaggle, local)
+*.zip
+NomNaOCR_dataset/
+Datasets/
+
+# Kaggle
+.kaggle/
+kaggle.json
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Logs & cache
+*.log
+.cache/
+.mypy_cache/
+.ruff_cache/
+
+# uv
+uv.lock
+lightning_logs/
+comer_data/
+hf_dataset/

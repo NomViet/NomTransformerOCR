@@ -21,7 +21,11 @@ from utils.image_utils import (
     blend_with_paper, random_paper_texture, apply_random_crop
 )
 
-os.makedirs(cfg.OUTPUT_DIR, exist_ok=True)
+IMG_DIR = os.path.join(cfg.OUTPUT_DIR, cfg.IMG_SUBDIR)
+LABEL_DIR = os.path.join(cfg.OUTPUT_DIR, cfg.LABEL_SUBDIR)
+
+os.makedirs(IMG_DIR, exist_ok=True)
+os.makedirs(LABEL_DIR, exist_ok=True)
 
 metadata_lock = Lock()
 counter_lock = Lock()
@@ -269,10 +273,11 @@ def process_page(task):
             return {'success': False, 'page_idx': page_idx}
         
         page_name = f"page_{page_idx:04d}.jpg"
-        paper.save(os.path.join(cfg.OUTPUT_DIR, page_name), quality=95)
+        paper.save(os.path.join(IMG_DIR, page_name), quality=95)
         
-        with open(os.path.join(cfg.OUTPUT_DIR, f"page_{page_idx:04d}.txt"), "w", encoding="utf-8") as f:
-            f.write(f"{page_name}\t{text}\n")
+        label_name = f"page_{page_idx:04d}.txt"
+        with open(os.path.join(LABEL_DIR, label_name), "w", encoding="utf-8") as f:
+            f.write(text)
         
         return {
             'success': True,
@@ -287,26 +292,73 @@ def process_page(task):
         return {'success': False, 'page_idx': page_idx}
 
 
-def merge_caption_files():
-    """Merge individual txt files into caption.txt."""
-    lines = []
-    txt_files = sorted([f for f in os.listdir(cfg.OUTPUT_DIR) 
-                        if f.endswith('.txt') and f != 'caption.txt'])
-    
-    for txt_file in txt_files:
+def convert_to_training_format():
+    """
+    Đọc img/ và label/ trong OUTPUT_DIR, tạo file caption.txt.
+
+    Cấu trúc sau khi hoàn tất:
+        synthesize_train/
+        ├── img/
+        │   ├── page_0001.jpg
+        │   ├── page_0002.jpg
+        │   └── ...
+        ├── label/
+        │   ├── page_0001.txt
+        │   ├── page_0002.txt
+        │   └── ...
+        └── caption.txt  (page_0001.jpg\tlabel1\npage_0002.jpg\tlabel2\n...)
+    """
+    print(f"\n{'='*70}")
+    print("CHUYỂN ĐỔI SANG TRAINING FORMAT")
+    print(f"{'='*70}")
+
+    caption_path = os.path.join(cfg.OUTPUT_DIR, "caption.txt")
+
+    label_files = sorted([
+        f for f in os.listdir(LABEL_DIR)
+        if f.endswith('.txt')
+    ])
+
+    if not label_files:
+        print(f"Không tìm thấy file label nào trong {LABEL_DIR}")
+        return
+
+    captions = []
+    success_count = 0
+    failed_count = 0
+
+    for label_file in tqdm(label_files, desc="Building caption.txt"):
         try:
-            with open(os.path.join(cfg.OUTPUT_DIR, txt_file), 'r', encoding='utf-8') as f:
-                content = f.read().strip()
-                if content:
-                    lines.append(content)
+            label_path = os.path.join(LABEL_DIR, label_file)
+            with open(label_path, 'r', encoding='utf-8') as f:
+                label = f.read().strip()
+
+            if not label:
+                failed_count += 1
+                continue
+
+            img_name = label_file.replace('.txt', '.jpg')
+            img_path = os.path.join(IMG_DIR, img_name)
+
+            if not os.path.exists(img_path):
+                print(f"Không tìm thấy ảnh {img_name}, bỏ qua")
+                failed_count += 1
+                continue
+
+            captions.append(f"{img_name}\t{label}")
+            success_count += 1
+
         except Exception as e:
-            print(f"Error reading {txt_file}: {e}")
+            print(f"Lỗi xử lý {label_file}: {e}")
+            failed_count += 1
             continue
-    
-    with open(os.path.join(cfg.OUTPUT_DIR, 'caption.txt'), 'w', encoding='utf-8') as f:
-        f.write('\n'.join(lines))
-    
-    print(f"\nMerged into caption.txt ({len(lines)} lines)")
+
+    with open(caption_path, 'w', encoding='utf-8') as f:
+        f.write('\n'.join(captions))
+
+    print(f"\nCaption: {caption_path}")
+    print(f"Thành công: {success_count}, Lỗi: {failed_count}")
+    print(f"{'='*70}")
 
 
 # =============================================================================
@@ -399,8 +451,8 @@ def main():
     
     print("="*70)
     
-    # Merge files
-    merge_caption_files()
+    # Tạo caption.txt từ img/ + label/
+    convert_to_training_format()
 
 
 if __name__ == "__main__":

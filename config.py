@@ -14,7 +14,9 @@ class DataGeneration:
     CHAR_DIR = "all_character_images"
     PAPER_DIR = "papers"
     FALLBACK_FONT = "NomNaTong-Regular.ttf"
-    OUTPUT_DIR = "outputs_balanced"
+    OUTPUT_DIR = "synthesize_train"
+    IMG_SUBDIR = "img"
+    LABEL_SUBDIR = "label"
     METADATA_FILE = "generation_metadata.json"
 
     # Quota strategy
@@ -76,12 +78,12 @@ class DataGeneration:
 
 class CoMERFormat:
     # Input paths
-    DATASET_DIR = '../Datasets/Patches'
+    DATASET_DIR = '/bao/Nom-Viet/NomNaOCR/Datasets/Patches'
     TRAIN_TRANSCRIPTS_PATH = f'{DATASET_DIR}/Train.txt'
     VAL_TRANSCRIPTS_PATH = f'{DATASET_DIR}/Validate.txt'
 
     # Output
-    OUTPUT_DIR = './comer_data_synthesize_10k'
+    OUTPUT_DIR = './comer_data'
 
     # Processing params
     NUM_TRAIN_SAMPLES = 1000000
